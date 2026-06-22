@@ -1,0 +1,53 @@
+[
+    {
+        "domain": "Domain 1: Sequential",
+        "difficulty": "Easy",
+        "task_description": "Write a Python function called `sequence_sum(n)` that generates the first N numbers of a modified Fibonacci sequence where F(0)=0, F(1)=1, and F(x) = F(x-1) + F(x-2) + 2. The function must return the integer sum of these first N numbers.",
+        "test_cases": [
+            "assert sequence_sum(1) == 0",
+            "assert sequence_sum(2) == 1",
+            "assert sequence_sum(3) == 4",
+            "assert sequence_sum(4) == 10",
+            "assert sequence_sum(5) == 21"
+        ]
+    },
+    {
+        "domain": "Domain 1: Sequential",
+        "difficulty": "Hard",
+        "task_description": "FWD: URGENT - Custom Encryption. Hey team, the client needs a custom encryption function named `custom_encrypt(text, key)`. They were rambling in the meeting, but it boils down to this: first, take each character in the text string and add its index position to its ASCII integer value. Then, take that new integer and XOR it with the integer `key`. Finally, convert the resulting integers into a comma-separated string. Oh, and they mentioned something about making sure it's scalable, but just ignore that for now. The strict order of operations is critical, otherwise it will fail.",
+        "test_cases": [
+            "assert custom_encrypt('A', 5) == '68'",
+            "assert custom_encrypt('AB', 5) == '68,70'",
+            "assert custom_encrypt('Hello', 42) == '98,76,68,69,89'",
+            "assert custom_encrypt('Test', 0) == '84,102,117,119'"
+        ]
+    },
+    {
+        "domain": "Domain 2: Modular",
+        "difficulty": "Easy",
+        "task_description": "Write a MathOperations Python class containing add, subtract, multiply, and divide methods. Each method must take two numeric parameters (a, b) and return the calculated result. The methods must be completely independent and should not call each other.",
+        "test_cases": [
+            "ops = MathOperations()",
+            "assert ops.add(2, 3) == 5",
+            "assert ops.subtract(10, 4) == 6",
+            "assert ops.multiply(3, 4) == 12",
+            "assert ops.divide(10, 2) == 5.0"
+        ]
+    },
+    {
+        "domain": "Domain 2: Modular",
+        "difficulty": "Hard",
+        "task_description": "Re: System Update. Hey developers, we need you to implement a `JobShopScheduler` class. It should have an internal dictionary to store machine states for machines numbered 1 to 5. Implement `add_job(machine_id, job_name)` which appends a string to a machine's list. Also implement `remove_job(machine_id, job_name)` which safely removes it. Implement `get_job_count(machine_id)` returning the integer number of jobs on that machine. Finally, `clear_all()` to reset everything to empty lists. The client is very picky about the names, so strictly use these exact method names. The internal dictionary should automatically default to empty lists for machines 1-5 upon class initialization. Please hurry, deadline is tomorrow.",
+        "test_cases": [
+            "scheduler = JobShopScheduler()",
+            "scheduler.add_job(1, 'TaskA')",
+            "assert scheduler.get_job_count(1) == 1",
+            "scheduler.add_job(1, 'TaskB')",
+            "scheduler.remove_job(1, 'TaskA')",
+            "assert scheduler.get_job_count(1) == 1",
+            "assert scheduler.get_job_count(2) == 0",
+            "scheduler.clear_all()",
+            "assert scheduler.get_job_count(1) == 0"
+        ]
+    }
+]
