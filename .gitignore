@@ -24,6 +24,7 @@ __pycache__/
 logs/*
 !logs/.gitkeep
 data/experiment_results.csv
+data/experiment_results_old.csv
 
 # OS generated files
 .DS_Store
