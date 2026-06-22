@@ -2,7 +2,7 @@
 
 This project is an experimental framework built with [LangGraph](https://python.langchain.com/docs/langgraph) to evaluate and benchmark the coding capabilities of Large Language Models (LLMs) across different agentic architectures. The pipeline tests how well different multi-agent topologies (from zero-shot single agents to complex adaptive map-reduce architectures) perform on various coding tasks.
 
-## 🏗️ Agent Architectures
+## Agent Architectures
 
 The project evaluates three distinct levels of agentic complexity:
 
@@ -10,7 +10,7 @@ The project evaluates three distinct levels of agentic complexity:
 2. **Level 2 (Multi-Agent Map-Reduce):** A manager agent breaks down the task into sub-tasks. Multiple sub-agents work on these tasks in parallel/sequence, and an integrator agent merges their code into a single script.
 3. **Level 3 (Adaptive Multi-Agent with Critic):** Builds upon Level 2 by adding an evaluation and critic loop. If the generated code fails automated tests, a Critic agent analyzes the traceback and provides feedback to the Manager, triggering a re-plan and rewrite (up to a maximum number of iterations).
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -42,7 +42,7 @@ The project evaluates three distinct levels of agentic complexity:
    docker pull python:3.10-alpine
    ```
 
-## 🎮 Usage
+## Usage
 
 To run the experimental matrix, simply execute the main script:
 
@@ -57,7 +57,7 @@ This will run all configured architectures against the tasks defined in `data/ta
 - **`logs/agent_pipeline.log`**: Detailed logs of agent interactions, rate limiting, and evaluator tracebacks.
 - **`data/experiment_results.csv`**: A CSV file summarizing the success/failure, runtime, and critic iterations for each run.
 
-## 📂 Project Structure
+## Project Structure
 
 ```text
 project/
@@ -79,12 +79,12 @@ project/
     └── logger.py               # Centralized logging configuration
 ```
 
-## 📊 Preliminary Findings
+## Preliminary Findings
 
 Based on initial benchmarks using this framework:
 - **Zero-Shot (Level 1)** performs surprisingly well for well-defined tasks that fit comfortably within the context window.
 - **Map-Reduce (Level 2/3)** struggles heavily with highly sequential, tightly-coupled code due to context isolation between sub-agents. However, it shows promise when tasks are modular and independent. API rate limiting is a significant factor in multi-agent runtime overhead.
 
-## 🛡️ Secure Evaluation
+## Secure Evaluation
 
 All generated code is evaluated inside an ephemeral, network-isolated Docker container (`python:3.10-alpine`). Memory limits, CPU constraints, and timeouts are enforced to prevent malicious code execution or infinite loops from crashing the host machine.
