@@ -13,6 +13,10 @@ class AgenticResearchState(TypedDict):
     # List of generated snippets. Managed manually to allow clearing on re-plan.
     code_snippets: List[str]
     
+    # NEW: Round 2 Modifications
+    design_manifest: str      # Holds the global SOP and structural rules
+    structural_error: bool    # True if Critic forces a Manager re-plan
+    
     # Integration and Evaluation variables
     current_code: str
     feedback: str

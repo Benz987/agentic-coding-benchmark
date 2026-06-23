@@ -1,3 +1,4 @@
+import re
 import tempfile
 import os
 import time
@@ -86,64 +87,75 @@ def single_agent_node(state: AgenticResearchState) -> Dict[str, Any]:
     }
 
 def manager_node(state: AgenticResearchState) -> Dict[str, Any]:
-    logger.info("Manager Agent: Analyzing task and defining architecture...")
+    logger.info("Manager Agent: Analyzing task and defining Architecture Manifest...")
     
     task = state["task_description"]
     user_prompt = f"<task_description>\n{task}\n</task_description>"
     
-    # Inject Critic feedback if it exists from a previous failed loop
     critic_fb = state.get("critic_feedback", "")
-    if critic_fb:
-        logger.info("Manager Agent: Adjusting plan based on Critic's feedback.")
+    if critic_fb and state.get("structural_error", False):
+        logger.warning("Manager Agent: Major structural failure detected. Re-planning entirely based on Critic's feedback.")
         user_prompt += f"\n\n<critic_feedback>\n{critic_fb}\n</critic_feedback>"
     
     llm_response = call_llm(MANAGER_PROMPT, user_prompt, temperature=0.1)
     log_agent_interaction("MANAGER", user_prompt, llm_response)
     
-    tasks_list = extract_json_from_llm(llm_response)
-    logger.info(f"Manager Agent: Found {len(tasks_list)} sub-tasks.")
+    # Extract the SOP Manifest
+    manifest_match = re.search(r'<manifest>(.*?)</manifest>', llm_response, re.DOTALL)
+    manifest = manifest_match.group(1).strip() if manifest_match else "Follow standard Python conventions."
     
+    # Extract the Subtasks
+    tasks_list = extract_json_from_llm(llm_response)
+    
+    logger.info(f"Manager Agent: Created Global SOP Manifest and found {len(tasks_list)} sub-tasks.")
     return {
+        "design_manifest": manifest,
         "sub_tasks": tasks_list,
         "current_subtask_index": 0,
-        "code_snippets": [], # We MUST clear the old snippets on a re-plan!
-        "critic_feedback": "" # Clear the feedback so it doesn't pollute future iterations
+        "code_snippets": [],
+        "critic_feedback": "", # Clear feedback so it doesn't pollute next loops
+        "structural_error": False
     }
 
 def sub_agent_node(state: AgenticResearchState) -> Dict[str, Any]:
     idx = state["current_subtask_index"]
     current_task = state["sub_tasks"][idx]
     
-    logger.info(f"Sub-Agent [{idx + 1}/{len(state['sub_tasks'])}]: Writing code for module...")
+    logger.info(f"Sub-Agent [{idx + 1}/{len(state['sub_tasks'])}]: Writing code strictly following manifest...")
     
-    user_prompt = f"<subtask>\n{current_task}\n</subtask>"
+    user_prompt = f"<manifest>\n{state.get('design_manifest', '')}\n</manifest>\n\n<subtask>\n{current_task}\n</subtask>"
     llm_response = call_llm(DEVELOPER_PROMPT, user_prompt)
     
     log_agent_interaction(f"SUB_AGENT_{idx+1}", user_prompt, llm_response)
-    
     clean_snippet = clean_code(llm_response)
     
     current_snippets = state.get("code_snippets", [])
+    updated_snippets = current_snippets + [clean_snippet]
     
     return {
-        "code_snippets": current_snippets + [clean_snippet],
+        "code_snippets": updated_snippets,
         "current_subtask_index": idx + 1
     }
 
 def integrator_node(state: AgenticResearchState) -> Dict[str, Any]:
-    logger.info("Integrator Agent: Merging all snippets into a single file...")
+    logger.info("Integrator Agent: Merging snippets and applying SOP / Minor Fixes...")
     
     snippets_text = "\n\n--- NEXT SNIPPET ---\n\n".join(state["code_snippets"])
-    user_prompt = f"<snippets>\n{snippets_text}\n</snippets>"
+    user_prompt = f"<manifest>\n{state.get('design_manifest', '')}\n</manifest>\n\n<snippets>\n{snippets_text}\n</snippets>"
+    
+    critic_fb = state.get("critic_feedback", "")
+    if critic_fb and not state.get("structural_error", False):
+        logger.info("Integrator Agent: Applying minor syntax fixes based on Critic feedback.")
+        user_prompt += f"\n\n<critic_feedback>\n{critic_fb}\n</critic_feedback>"
     
     llm_response = call_llm(INTEGRATOR_PROMPT, user_prompt)
-    
     log_agent_interaction("INTEGRATOR", user_prompt, llm_response)
     
     clean_final_code = clean_code(llm_response)
     
     return {
-        "current_code": clean_final_code
+        "current_code": clean_final_code,
+        "critic_feedback": "" # Clear feedback
     }
 
 def evaluator_node(state: AgenticResearchState) -> Dict[str, Any]:
@@ -168,19 +180,28 @@ def evaluator_node(state: AgenticResearchState) -> Dict[str, Any]:
 
 def critic_node(state: AgenticResearchState) -> Dict[str, Any]:
     iteration = state['iterations'] + 1
-    logger.info(f"Critic Agent: Analyzing failure and advising Manager (Iteration {iteration}/3)...")
+    logger.info(f"Critic Agent: Analyzing failure and determining routing branch (Iteration {iteration}/3)...")
     
     task = state["task_description"]
     code = state["current_code"]
     error = state["feedback"]
     
-    user_prompt = f"<original_task>\n{task}\n</original_task>\n\n<code>\n{code}\n</code>\n\n<error_trace>\n{error}\n</error_trace>\n\nPlease advise the Manager."
+    user_prompt = f"<original_task>\n{task}\n</original_task>\n\n<code>\n{code}\n</code>\n\n<error_trace>\n{error}\n</error_trace>\n\nPlease advise."
     llm_response = call_llm(CRITIC_PROMPT, user_prompt, temperature=0.3)
     
     log_agent_interaction(f"CRITIC_ITER_{iteration}", user_prompt, llm_response)
     
+    # Analyze the Critic's tag to set the routing branch
+    is_structural = "[MAJOR_STRUCTURAL_ERROR]" in llm_response
+    
+    if is_structural:
+        logger.warning("Critic Agent: MAJOR STRUCTURAL ERROR detected. Routing back to Manager for total re-plan.")
+    else:
+        logger.info("Critic Agent: MINOR SYNTAX ERROR detected. Routing to Integrator for quick patch.")
+    
     return {
         "critic_feedback": llm_response,
+        "structural_error": is_structural,
         "iterations": state["iterations"] + 1
     }
 
@@ -197,3 +218,10 @@ def route_evaluation(state: AgenticResearchState) -> str:
     if state["iterations"] >= 3:
         return "end_failure"
     return "critic"
+
+def route_from_critic(state: AgenticResearchState) -> str:
+    """LATS-inspired Architectural Branching Logic"""
+    if state.get("structural_error", False):
+        return "manager"     # Drop the bad plan, generate a new one
+    else:
+        return "integrator"  # Quick fix without touching the Sub-Agents
