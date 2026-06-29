@@ -100,6 +100,11 @@ def call_llm(system_prompt: str, user_prompt: str, temperature: float = 0.2) -> 
 def extract_json_from_llm(response_text: str) -> List[str]:
     """Robust helper to extract a JSON list from the LLM output."""
     try:
+        # First, try to extract from a ```json block
+        match = re.search(r'```json\n(.*?)\n```', response_text, re.DOTALL)
+        if match:
+            return json.loads(match.group(1).strip())
+            
         start_idx = response_text.find('[')
         end_idx = response_text.rfind(']') + 1
         if start_idx != -1 and end_idx != -1:
@@ -109,8 +114,13 @@ def extract_json_from_llm(response_text: str) -> List[str]:
         return [response_text]
 
 def clean_code(llm_output: str) -> str:
-    """Extracts raw Python code from markdown blocks."""
+    """Extracts raw Python code from markdown blocks and strips HTML comments."""
     match = re.search(r'```python\n(.*?)\n```', llm_output, re.DOTALL)
     if match:
-        return match.group(1).strip()
-    return llm_output.strip()
+        code = match.group(1).strip()
+    else:
+        code = llm_output.strip()
+        
+    # Final safety net to strip HTML comments injected by LLM
+    code = re.sub(r'<!--.*?-->', '', code, flags=re.DOTALL)
+    return code.strip()

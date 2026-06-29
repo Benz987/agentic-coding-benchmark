@@ -49,5 +49,35 @@
             "scheduler.clear_all()",
             "assert scheduler.get_job_count(1) == 0"
         ]
+    },
+    {
+        "domain": "Domain 2: Modular",
+        "difficulty": "Extreme",
+        "task_description": "Implement a `DataPipeline` class with four methods. 1) `clean_data(raw_data: str) -> list` takes a newline-separated string of 'id,name,score' and returns a list of dictionaries, explicitly ignoring any rows missing a comma or having empty values. 2) `calculate_stats(data: list) -> dict` takes that list and returns a dictionary with keys 'avg', 'max', and 'min' calculated from the scores (as floats). 3) `generate_report(stats: dict) -> str` returns the string 'REPORT: Avg=[avg], Max=[max], Min=[min]'. 4) `run(raw_data: str) -> str` chains the three methods together and returns the final report string.",
+        "test_cases": [
+            "pipeline = DataPipeline()",
+            "raw = '1,Alice,85\\n2,Bob,95\\n3,,\\n4,Dave,90\\nbad_row'",
+            "stats = pipeline.calculate_stats([{'id': 1, 'name': 'A', 'score': 10}, {'id': 2, 'name': 'B', 'score': 20}])",
+            "assert stats['max'] == 20.0",
+            "assert stats['avg'] == 15.0",
+            "final = pipeline.run(raw)",
+            "assert final == 'REPORT: Avg=90.0, Max=95.0, Min=85.0'"
+        ]
+    },
+    {
+        "domain": "Domain 1: Sequential",
+        "difficulty": "Extreme",
+        "task_description": "Build a mini math interpreter using three separate functions. 1) `tokenize(expr: str) -> list` takes a string like '( 3 + 4 )' and returns a list of string tokens, ignoring spaces. 2) `parse_tokens(tokens: list) -> dict` takes those tokens and returns an Abstract Syntax Tree (AST) dictionary exactly in the format {'op': '+', 'left': 3, 'right': 4}. Assume only single-digit additions or subtractions surrounded by parentheses. 3) `evaluate_ast(ast: dict) -> int` takes the AST dictionary and computes the final integer result. You must implement all three functions separately.",
+        "test_cases": [
+            "tokens = tokenize('( 8 - 3 )')",
+            "assert tokens == ['(', '8', '-', '3', ')']",
+            "ast = parse_tokens(['(', '8', '-', '3', ')'])",
+            "assert ast['op'] == '-'",
+            "assert ast['left'] == 8",
+            "assert ast['right'] == 3",
+            "result = evaluate_ast(ast)",
+            "assert result == 5",
+            "assert evaluate_ast(parse_tokens(tokenize('( 9 + 1 )'))) == 10"
+        ]
     }
 ]

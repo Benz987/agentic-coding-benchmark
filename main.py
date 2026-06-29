@@ -8,6 +8,7 @@ from src.graph import build_level_1_graph, build_level_2_graph, build_level_3_gr
 from src.logger import logger
 
 def run_experiments():
+
     # 1. Ensure setup is correct
     if not os.getenv("GROQ_API_KEY"):
         logger.error("GROQ_API_KEY is not set. Exiting.")
@@ -17,7 +18,17 @@ def run_experiments():
     results_file = "data/experiment_results.csv"
     
     with open("data/tasks.json", "r", encoding="utf-8") as f:
-        tasks = json.load(f)
+        all_tasks = json.load(f)
+
+    tasks = []
+    # Uncomment the tasks you want to run:
+    # tasks.extend([t for t in all_tasks if t["domain"] == "Domain 1: Sequential" and t["difficulty"] == "Easy"])
+    # tasks.extend([t for t in all_tasks if t["domain"] == "Domain 1: Sequential" and t["difficulty"] == "Hard"])
+    tasks.extend([t for t in all_tasks if t["domain"] == "Domain 1: Sequential" and t["difficulty"] == "Extreme"])
+    
+    # tasks.extend([t for t in all_tasks if t["domain"] == "Domain 2: Modular" and t["difficulty"] == "Easy"])
+    # tasks.extend([t for t in all_tasks if t["domain"] == "Domain 2: Modular" and t["difficulty"] == "Hard"])
+    tasks.extend([t for t in all_tasks if t["domain"] == "Domain 2: Modular" and t["difficulty"] == "Extreme"])
 
     # 2. Define the architectures to test
     architectures = [

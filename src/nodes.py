@@ -75,7 +75,7 @@ def single_agent_node(state: AgenticResearchState) -> Dict[str, Any]:
     logger.info("Single Agent: Attempting to solve the entire task zero-shot...")
     
     task = state["task_description"]
-    user_prompt = f"<task_description>\n{task}\n</task_description>"
+    user_prompt = f"### TASK DESCRIPTION ###\n{task}\n"
     
     llm_response = call_llm(SINGLE_AGENT_PROMPT, user_prompt, temperature=0.2)
     
@@ -90,18 +90,18 @@ def manager_node(state: AgenticResearchState) -> Dict[str, Any]:
     logger.info("Manager Agent: Analyzing task and defining Architecture Manifest...")
     
     task = state["task_description"]
-    user_prompt = f"<task_description>\n{task}\n</task_description>"
+    user_prompt = f"### TASK DESCRIPTION ###\n{task}\n"
     
     critic_fb = state.get("critic_feedback", "")
     if critic_fb and state.get("structural_error", False):
         logger.warning("Manager Agent: Major structural failure detected. Re-planning entirely based on Critic's feedback.")
-        user_prompt += f"\n\n<critic_feedback>\n{critic_fb}\n</critic_feedback>"
+        user_prompt += f"\n\n### CRITIC FEEDBACK ###\n{critic_fb}\n"
     
     llm_response = call_llm(MANAGER_PROMPT, user_prompt, temperature=0.1)
     log_agent_interaction("MANAGER", user_prompt, llm_response)
     
     # Extract the SOP Manifest
-    manifest_match = re.search(r'<manifest>(.*?)</manifest>', llm_response, re.DOTALL)
+    manifest_match = re.search(r'### MANIFEST ###\n(.*?)(?:\n###|$|```json)', llm_response, re.DOTALL)
     manifest = manifest_match.group(1).strip() if manifest_match else "Follow standard Python conventions."
     
     # Extract the Subtasks
@@ -123,7 +123,7 @@ def sub_agent_node(state: AgenticResearchState) -> Dict[str, Any]:
     
     logger.info(f"Sub-Agent [{idx + 1}/{len(state['sub_tasks'])}]: Writing code strictly following manifest...")
     
-    user_prompt = f"<manifest>\n{state.get('design_manifest', '')}\n</manifest>\n\n<subtask>\n{current_task}\n</subtask>"
+    user_prompt = f"### MANIFEST ###\n{state.get('design_manifest', '')}\n\n### SUBTASK ###\n{current_task}\n"
     llm_response = call_llm(DEVELOPER_PROMPT, user_prompt)
     
     log_agent_interaction(f"SUB_AGENT_{idx+1}", user_prompt, llm_response)
@@ -141,12 +141,12 @@ def integrator_node(state: AgenticResearchState) -> Dict[str, Any]:
     logger.info("Integrator Agent: Merging snippets and applying SOP / Minor Fixes...")
     
     snippets_text = "\n\n--- NEXT SNIPPET ---\n\n".join(state["code_snippets"])
-    user_prompt = f"<manifest>\n{state.get('design_manifest', '')}\n</manifest>\n\n<snippets>\n{snippets_text}\n</snippets>"
+    user_prompt = f"### MANIFEST ###\n{state.get('design_manifest', '')}\n\n### SNIPPETS ###\n{snippets_text}\n"
     
     critic_fb = state.get("critic_feedback", "")
     if critic_fb and not state.get("structural_error", False):
         logger.info("Integrator Agent: Applying minor syntax fixes based on Critic feedback.")
-        user_prompt += f"\n\n<critic_feedback>\n{critic_fb}\n</critic_feedback>"
+        user_prompt += f"\n\n### CRITIC FEEDBACK ###\n{critic_fb}\n"
     
     llm_response = call_llm(INTEGRATOR_PROMPT, user_prompt)
     log_agent_interaction("INTEGRATOR", user_prompt, llm_response)
@@ -186,7 +186,7 @@ def critic_node(state: AgenticResearchState) -> Dict[str, Any]:
     code = state["current_code"]
     error = state["feedback"]
     
-    user_prompt = f"<original_task>\n{task}\n</original_task>\n\n<code>\n{code}\n</code>\n\n<error_trace>\n{error}\n</error_trace>\n\nPlease advise."
+    user_prompt = f"### ORIGINAL TASK ###\n{task}\n\n### CODE ###\n{code}\n\n### ERROR TRACE ###\n{error}\n\nPlease advise."
     llm_response = call_llm(CRITIC_PROMPT, user_prompt, temperature=0.3)
     
     log_agent_interaction(f"CRITIC_ITER_{iteration}", user_prompt, llm_response)
