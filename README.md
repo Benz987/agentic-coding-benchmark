@@ -79,11 +79,13 @@ project/
     └── logger.py               # Centralized logging configuration
 ```
 
-## Preliminary Findings
+## GenAI Use
 
-Based on initial benchmarks using this framework:
-- **Zero-Shot (Level 1)** performs surprisingly well for well-defined tasks that fit comfortably within the context window.
-- **Map-Reduce (Level 2/3)** struggles heavily with highly sequential, tightly-coupled code due to context isolation between sub-agents. However, it shows promise when tasks are modular and independent. API rate limiting is a significant factor in multi-agent runtime overhead.
+| Phase | GenAI Tool Used | Validation Method |
+| :--- | :--- | :--- |
+| Literature Review | Gemini | Asked for relevant papers, manually verified sources via Google Scholar, and requested explanations for complex concepts. |
+| Code Architecture Design | Antigravity | Collaborated extensively on architectural planning prior to code generation. Directed module-by-module generation, reviewed and adjusted the code, and iteratively refined base prompts and benchmark tasks. |
+| Report Drafting | Claude | Provided detailed section outlines and analytical points to improve academic phrasing. Manually reviewed and adjusted the final generated text. |
 
 ## Secure Evaluation
 
